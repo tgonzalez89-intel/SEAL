@@ -7,7 +7,7 @@ cmake -S . -B build \
 -DCMAKE_CXX_COMPILER=g++ \
 -DCMAKE_BUILD_TYPE=Release \
 -DCMAKE_INSTALL_PREFIX=install \
--DCMAKE_PREFIX_PATH="$(realpath ${PWD}/../tgonzale-hexl/install);$(realpath ${PWD}/../tgonzale-hexl-fpga/install)" \
+-DCMAKE_PREFIX_PATH="$(realpath ${PWD}/../hexl/install);$(realpath ${PWD}/../hexl-fpga/install)" \
 -DSEAL_BUILD_EXAMPLES=ON \
 -DSEAL_BUILD_TESTS=OFF \
 -DSEAL_BUILD_BENCH=OFF \
