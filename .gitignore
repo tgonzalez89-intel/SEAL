@@ -30,6 +30,7 @@ bin/
 lib/
 build/
 *.build
+install/
 env
 thirdparty/
 

@@ -17,7 +17,6 @@ endif()
 
 if(SEAL_BUILD_EXAMPLES)
     add_executable(sealexamples)
-
     target_sources(sealexamples
         PRIVATE
             ${CMAKE_CURRENT_LIST_DIR}/examples.cpp
@@ -36,5 +35,17 @@ if(SEAL_BUILD_EXAMPLES)
         target_link_libraries(sealexamples PRIVATE SEAL::seal_shared)
     else()
         message(FATAL_ERROR "Cannot find target SEAL::seal or SEAL::seal_shared")
+    endif()
+
+    if(HEXL_FPGA)
+        add_definitions(-DHEXL_FPGA)
+        find_package(hexl-fpga)
+        if(TARGET hexl-fpga::hexl-fpga)
+            target_link_libraries(sealexamples PRIVATE hexl-fpga::hexl-fpga)
+        elseif(TARGET hexl-fpga)
+            target_link_libraries(sealexamples PRIVATE hexl-fpga)
+        else()
+            message(FATAL_ERROR "Cannot find target hexl-fpga")
+        endif()
     endif()
 endif()

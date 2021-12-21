@@ -4,8 +4,8 @@
 FetchContent_Declare(
     hexl
     PREFIX hexl
-    GIT_REPOSITORY https://github.com/intel/hexl
-    GIT_TAG 0858760 # 1.2.3
+    GIT_REPOSITORY "file:///home/tgonzale/keyswitch-seal-tests/tgonzale-hexl"
+    GIT_TAG hexl-fpga-integration
 )
 FetchContent_GetProperties(hexl)
 
@@ -18,6 +18,8 @@ if(NOT hexl_POPULATED)
     set(HEXL_COVERAGE OFF CACHE BOOL "" FORCE)
     set(HEXL_TESTING OFF CACHE BOOL "" FORCE)
     set(HEXL_SHARED_LIB ${BUILD_SHARED_LIBS} CACHE BOOL "" FORCE)
+    set(HEXL_EXPERIMENTAL ON CACHE BOOL "" FORCE)
+    set(HEXL_FPGA ${HEXL_FPGA} CACHE BOOL "" FORCE)
     set(EXCLUDE_FROM_ALL TRUE)
 
     mark_as_advanced(BUILD_HEXL)
@@ -27,6 +29,6 @@ if(NOT hexl_POPULATED)
 
     add_subdirectory(
         ${hexl_SOURCE_DIR}
-        EXCLUDE_FROM_ALL
+        #EXCLUDE_FROM_ALL
     )
 endif()

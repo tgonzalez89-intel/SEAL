@@ -12,6 +12,9 @@
 #include <algorithm>
 #include <cmath>
 #include <functional>
+#ifdef SEAL_USE_INTEL_HEXL
+#include "hexl/hexl.hpp"
+#endif
 
 using namespace std;
 using namespace seal::util;
@@ -481,6 +484,19 @@ namespace seal
             throw logic_error("invalid parameters");
         }
 
+#ifdef SEAL_USE_INTEL_HEXL
+        if (dest_size != 3)
+        {
+            throw logic_error("HEXL ckks multiply requires dest_size == 3");
+        }
+
+        // Prepare destination
+        encrypted1.resize(context_, context_data.parms_id(), dest_size);
+
+        intel::hexl::CkksMultiply(
+            encrypted1.data(), encrypted1.data(), encrypted2.data(), coeff_count, parms.coeff_modulus_values().data(),
+            coeff_modulus_size);
+#else
         // Set up iterator for the base
         auto coeff_modulus = iter(parms.coeff_modulus());
 
@@ -588,6 +604,7 @@ namespace seal
             // Set the final result
             set_poly_array(temp, dest_size, coeff_count, coeff_modulus_size, encrypted1.data());
         }
+#endif
 
         // Set the scale
         encrypted1.scale() = new_scale;

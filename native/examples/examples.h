@@ -90,6 +90,7 @@ inline void print_parameters(const seal::SEALContext &context)
     }
     std::cout << coeff_modulus.back().bit_count();
     std::cout << ") bits" << std::endl;
+    std::cout << "|   coeff_modulus.size: " << coeff_modulus.size() << std::endl;
 
     /*
     For the BFV scheme print the plain_modulus parameter.
