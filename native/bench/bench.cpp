@@ -4,6 +4,9 @@
 #include "seal/seal.h"
 #include "bench.h"
 #include <iomanip>
+#ifdef HEXL_FPGA
+#include "hexl-fpga.h"
+#endif
 
 using namespace benchmark;
 using namespace seal;
@@ -102,6 +105,15 @@ namespace sealbench
             SEAL_BENCHMARK_REGISTER(CKKS, n, log_q, EvaluateRelinInplace, bm_ckks_relin_inplace, bm_env_ckks);
             SEAL_BENCHMARK_REGISTER(CKKS, n, log_q, EvaluateRotate, bm_ckks_rotate, bm_env_ckks);
         }
+
+        SEAL_BENCHMARK_REGISTER(FPGA, n, log_q, EvaluateMulCt, bm_fpga_ckks_mul_ct, bm_env_ckks);
+        SEAL_BENCHMARK_REGISTER(FPGA, n, log_q, EvaluateSquare, bm_fpga_ckks_square, bm_env_ckks);
+        if (bm_env_bfv->context().using_keyswitching())
+        {
+            SEAL_BENCHMARK_REGISTER(FPGA, n, log_q, EvaluateRelinInplace, bm_fpga_ckks_relin_inplace, bm_env_ckks);
+            SEAL_BENCHMARK_REGISTER(FPGA, n, log_q, EvaluateRotate, bm_fpga_ckks_rotate, bm_env_ckks);
+        }
+
         SEAL_BENCHMARK_REGISTER(UTIL, n, log_q, NTTForward, bm_util_ntt_forward, bm_env_bfv);
         SEAL_BENCHMARK_REGISTER(UTIL, n, log_q, NTTInverse, bm_util_ntt_inverse, bm_env_bfv);
         SEAL_BENCHMARK_REGISTER(UTIL, n, 0, NTTForwardLowLevel, bm_util_ntt_forward_low_level, bm_env_bfv);
@@ -163,10 +175,16 @@ int main(int argc, char **argv)
         sealbench::register_bm_family(i, bm_env_map);
     }
 
+#ifdef HEXL_FPGA
+    intel::hexl::acquire_FPGA_resources();
+#endif
     RunSpecifiedBenchmarks();
 
     // After running all benchmark cases, we print again the total memory consumption by SEAL memory pool.
     // This value should be larger than the previous amount but not by much.
     cout << "[" << setw(7) << right << (seal::MemoryManager::GetPool().alloc_byte_count() >> 20) << " MB] "
          << "Total allocation from the memory pool" << endl;
+#ifdef HEXL_FPGA
+    intel::hexl::release_FPGA_resources();
+#endif
 }

@@ -22,6 +22,7 @@ target_sources(sealtest
         ${CMAKE_CURRENT_LIST_DIR}/secretkey.cpp
         ${CMAKE_CURRENT_LIST_DIR}/serialization.cpp
         ${CMAKE_CURRENT_LIST_DIR}/testrunner.cpp
+        ${CMAKE_CURRENT_LIST_DIR}/fpga-ckks-tests.cpp
 )
 
 add_subdirectory(util)

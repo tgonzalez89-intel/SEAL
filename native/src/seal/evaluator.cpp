@@ -2153,6 +2153,36 @@ namespace seal
             }
         }
 
+#ifdef SEAL_USE_INTEL_HEXL
+        if (scheme == scheme_type::ckks)
+        {
+            // Prep for call to HEXL
+            std::vector<uint64_t> hexl_moduli;
+            std::vector<uint64_t> hexl_modswitch_factors;
+
+            for (size_t l = 0; l < key_modulus_size; ++l)
+            {
+                uint64_t hexl_key_modulus = key_ntt_tables[l].modulus().value();
+                uint64_t hexl_key_root_of_unity = key_ntt_tables[l].get_root();
+                hexl_moduli.push_back(hexl_key_modulus);
+                hexl_modswitch_factors.push_back(modswitch_factors[l].operand);
+            }
+
+            std::vector<const uint64_t *> hexl_key_vectors;
+            for (auto &each_key : key_vector)
+            {
+                hexl_key_vectors.push_back(&each_key.data()[0]);
+            }
+            const uint64_t *t_target_iter_ptr = &(*target_iter)[0];
+
+            intel::hexl::CkksSwitchKey(
+                encrypted.data(), t_target_iter_ptr, coeff_count, decomp_modulus_size, key_modulus_size,
+                rns_modulus_size, key_component_count, hexl_moduli.data(), hexl_key_vectors.data(),
+                hexl_modswitch_factors.data());
+            return;
+        }
+#endif
+
         // Create a copy of target_iter
         SEAL_ALLOCATE_GET_RNS_ITER(t_target, coeff_count, decomp_modulus_size, pool);
         set_uint(target_iter, decomp_modulus_size * coeff_count, t_target);

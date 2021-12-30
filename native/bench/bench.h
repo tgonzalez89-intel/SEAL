@@ -373,4 +373,10 @@ namespace sealbench
     void bm_ckks_rescale_inplace(benchmark::State &state, std::shared_ptr<BMEnv> bm_env);
     void bm_ckks_relin_inplace(benchmark::State &state, std::shared_ptr<BMEnv> bm_env);
     void bm_ckks_rotate(benchmark::State &state, std::shared_ptr<BMEnv> bm_env);
+
+    // FPGA-specific benchmark cases
+    void bm_fpga_ckks_mul_ct(benchmark::State &state, std::shared_ptr<BMEnv> bm_env);
+    void bm_fpga_ckks_square(benchmark::State &state, std::shared_ptr<BMEnv> bm_env);
+    void bm_fpga_ckks_relin_inplace(benchmark::State &state, std::shared_ptr<BMEnv> bm_env);
+    void bm_fpga_ckks_rotate(benchmark::State &state, std::shared_ptr<BMEnv> bm_env);
 } // namespace sealbench

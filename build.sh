@@ -8,7 +8,7 @@ cmake -S . -B build \
 -DCMAKE_BUILD_TYPE=Release \
 -DCMAKE_INSTALL_PREFIX=install \
 -DCMAKE_PREFIX_PATH="$(realpath ${PWD}/../hexl/install);$(realpath ${PWD}/../hexl-fpga/install)" \
--DSEAL_BUILD_EXAMPLES=ON \
+-DSEAL_BUILD_EXAMPLES=OFF \
 -DSEAL_BUILD_TESTS=OFF \
 -DSEAL_BUILD_BENCH=OFF \
 -DSEAL_BUILD_DEPS=OFF \

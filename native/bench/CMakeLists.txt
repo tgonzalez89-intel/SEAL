@@ -60,6 +60,7 @@ if(SEAL_BUILD_BENCH)
             ${CMAKE_CURRENT_LIST_DIR}/ntt.cpp
             ${CMAKE_CURRENT_LIST_DIR}/bfv.cpp
             ${CMAKE_CURRENT_LIST_DIR}/ckks.cpp
+            ${CMAKE_CURRENT_LIST_DIR}/fpga-ckks-bench.cpp
     )
 
     if(TARGET SEAL::seal)
@@ -68,5 +69,17 @@ if(SEAL_BUILD_BENCH)
         target_link_libraries(sealbench PRIVATE SEAL::seal_shared benchmark::benchmark)
     else()
         message(FATAL_ERROR "Cannot find target SEAL::seal or SEAL::seal_shared")
+    endif()
+
+    if(HEXL_FPGA)
+        add_definitions(-DHEXL_FPGA)
+        find_package(hexl-fpga)
+        if(TARGET hexl-fpga::hexl-fpga)
+            target_link_libraries(sealbench PRIVATE hexl-fpga::hexl-fpga)
+        elseif(TARGET hexl-fpga)
+            target_link_libraries(sealbench PRIVATE hexl-fpga)
+        else()
+            message(FATAL_ERROR "Cannot find target hexl-fpga")
+        endif()
     endif()
 endif()

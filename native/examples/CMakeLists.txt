@@ -16,7 +16,10 @@ if(NOT DEFINED SEAL_BUILD_EXAMPLES)
 endif()
 
 if(SEAL_BUILD_EXAMPLES)
+    include(cmake/gflags.cmake)
+
     add_executable(sealexamples)
+    add_executable(fpga-ckks-example)
     target_sources(sealexamples
         PRIVATE
             ${CMAKE_CURRENT_LIST_DIR}/examples.cpp
@@ -28,11 +31,17 @@ if(SEAL_BUILD_EXAMPLES)
             ${CMAKE_CURRENT_LIST_DIR}/6_serialization.cpp
             ${CMAKE_CURRENT_LIST_DIR}/7_performance.cpp
     )
+    target_sources(fpga-ckks-example
+        PRIVATE
+            ${CMAKE_CURRENT_LIST_DIR}/fpga-ckks-example.cpp
+    )
 
     if(TARGET SEAL::seal)
         target_link_libraries(sealexamples PRIVATE SEAL::seal)
+        target_link_libraries(fpga-ckks-example PRIVATE SEAL::seal)
     elseif(TARGET SEAL::seal_shared)
         target_link_libraries(sealexamples PRIVATE SEAL::seal_shared)
+        target_link_libraries(fpga-ckks-example PRIVATE SEAL::seal_shared)
     else()
         message(FATAL_ERROR "Cannot find target SEAL::seal or SEAL::seal_shared")
     endif()
@@ -42,10 +51,14 @@ if(SEAL_BUILD_EXAMPLES)
         find_package(hexl-fpga)
         if(TARGET hexl-fpga::hexl-fpga)
             target_link_libraries(sealexamples PRIVATE hexl-fpga::hexl-fpga)
+            target_link_libraries(fpga-ckks-example PRIVATE hexl-fpga::hexl-fpga)
         elseif(TARGET hexl-fpga)
             target_link_libraries(sealexamples PRIVATE hexl-fpga)
+            target_link_libraries(fpga-ckks-example PRIVATE hexl-fpga)
         else()
             message(FATAL_ERROR "Cannot find target hexl-fpga")
         endif()
     endif()
+
+    target_link_libraries(fpga-ckks-example PRIVATE libgflags)
 endif()
