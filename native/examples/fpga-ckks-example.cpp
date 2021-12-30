@@ -305,14 +305,14 @@ void run_internal(const mode_type mode, const SEALContext &context, const double
     encoder.decode(plain2, pod_vector2);
 
     if (pod_vector.size() != pod_vector2.size()) {
-        std::cout << "ERROR: Functionally incorrect: Input and ouput vectors have different sizes." << std::endl;
+        std::cout << "ERROR: Functionally incorrect: Input and ouput vectors have different sizes." << std::endl << std::endl;
         return;
     }
 
     for (size_t i = 0; i < pod_vector.size(); ++i) {
         if (std::abs(pod_vector[i] - pod_vector2[i]) >= 0.5) {
             std::cout << "expected[" << i << "]=" << pod_vector[i] << " output[" << i << "]=" << pod_vector2[i] <<  std::endl;
-            std::cout << "ERROR: Functionally incorrect: One or more values differ between input and output." << std::endl;
+            std::cout << "ERROR: Functionally incorrect: One or more values differ between expected and output." << std::endl << std::endl;
             return;
         }
     }
