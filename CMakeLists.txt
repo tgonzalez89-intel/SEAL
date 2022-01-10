@@ -218,14 +218,33 @@ set(SEAL_USE_INTEL_HEXL_OPTION_STR "Use Intel HEXL library")
 option(SEAL_USE_INTEL_HEXL ${SEAL_USE_INTEL_HEXL_OPTION_STR} OFF)
 message(STATUS "SEAL_USE_INTEL_HEXL: ${SEAL_USE_INTEL_HEXL}")
 
+# [option] SEAL_USE_INTEL_HEXL_FPGA (default: OFF)
+set(SEAL_USE_INTEL_HEXL_FPGA_OPTION_STR "Use Intel HEXL-FPGA library")
+option(SEAL_USE_INTEL_HEXL_FPGA ${SEAL_USE_INTEL_HEXL_FPGA_OPTION_STR} OFF)
+message(STATUS "SEAL_USE_INTEL_HEXL_FPGA: ${SEAL_USE_INTEL_HEXL_FPGA}")
+
+if(SEAL_USE_INTEL_HEXL_FPGA)
+    set(SEAL_USE_INTEL_HEXL ON CACHE BOOL "" FORCE)
+endif()
+
 if(SEAL_USE_INTEL_HEXL)
     if(SEAL_BUILD_DEPS)
         message(STATUS "Intel HEXL: download ...")
         seal_fetch_thirdparty_content(ExternalIntelHEXL)
+
+        message(STATUS "Intel HEXL-FPGA: download ...")
+        seal_fetch_thirdparty_content(ExternalIntelHEXLFPGA)
     else()
         find_package(HEXL 1.2.3)
         if (NOT TARGET HEXL::hexl)
             message(FATAL_ERROR "Intel HEXL: not found")
+        endif()
+
+        find_package(hexl-fpga 1.0)
+        if (NOT TARGET hexl-fpga::hexl-fpga)
+            message(FATAL_ERROR "Intel HEXL-FPGA: not found")
+        else()
+            add_library(hexl-fpga ALIAS hexl-fpga::hexl-fpga)
         endif()
     endif()
 endif()
@@ -424,8 +443,12 @@ if(NOT BUILD_SHARED_LIBS)
                 target_link_libraries(seal INTERFACE ${HEXL_INTERFACE_LINK_OPTIONS})
             endif()
             seal_combine_archives(seal HEXL::hexl)
+
+            add_dependencies(seal hexl-fpga)
+            target_link_libraries(seal PUBLIC hexl-fpga)
         else()
             target_link_libraries(seal PUBLIC HEXL::hexl)
+            target_link_libraries(seal PUBLIC hexl-fpga)
         endif()
     endif()
 
@@ -472,6 +495,8 @@ else()
         if (NOT "${HEXL_INTERFACE_LINK_OPTIONS}" STREQUAL "HEXL_INTERFACE_LINK_OPTIONS-NOTFOUND")
             target_link_libraries(seal_shared INTERFACE ${HEXL_INTERFACE_LINK_OPTIONS})
         endif()
+
+        target_link_libraries(seal_shared PRIVATE hexl-fpga)
 
         # Install shared HEXL library to installation directory
         install(DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}

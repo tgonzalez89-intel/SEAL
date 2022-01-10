@@ -2,6 +2,9 @@
 // Licensed under the MIT license.
 
 #include "examples.h"
+#ifdef HEXL_FPGA
+#include "hexl-fpga.h"
+#endif
 
 using namespace std;
 using namespace seal;
@@ -493,7 +496,13 @@ void ckks_performance_test(SEALContext context)
         */
         encrypted1.reserve(3);
         time_start = chrono::high_resolution_clock::now();
+#ifdef HEXL_FPGA
+        intel::hexl::set_worksize_DyadicMultiply(1);
+#endif
         evaluator.multiply_inplace(encrypted1, encrypted2);
+#ifdef HEXL_FPGA
+        intel::hexl::DyadicMultiplyCompleted();
+#endif
         time_end = chrono::high_resolution_clock::now();
         time_multiply_sum += chrono::duration_cast<chrono::microseconds>(time_end - time_start);
 
@@ -509,7 +518,13 @@ void ckks_performance_test(SEALContext context)
         [Square]
         */
         time_start = chrono::high_resolution_clock::now();
+#ifdef HEXL_FPGA
+//        intel::hexl::set_worksize_DyadicMultiply(1);
+#endif
         evaluator.square_inplace(encrypted2);
+#ifdef HEXL_FPGA
+//        intel::hexl::DyadicMultiplyCompleted();
+#endif
         time_end = chrono::high_resolution_clock::now();
         time_square_sum += chrono::duration_cast<chrono::microseconds>(time_end - time_start);
 

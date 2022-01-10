@@ -4,8 +4,8 @@
 FetchContent_Declare(
     hexl
     PREFIX hexl
-    GIT_REPOSITORY https://github.com/intel/hexl
-    GIT_TAG 0858760 # 1.2.3
+    GIT_REPOSITORY https://github.com/tgonzalez89-intel/hexl.git
+    GIT_TAG hexl-fpga-integration2
 )
 FetchContent_GetProperties(hexl)
 
@@ -18,6 +18,11 @@ if(NOT hexl_POPULATED)
     set(HEXL_COVERAGE OFF CACHE BOOL "" FORCE)
     set(HEXL_TESTING OFF CACHE BOOL "" FORCE)
     set(HEXL_SHARED_LIB ${BUILD_SHARED_LIBS} CACHE BOOL "" FORCE)
+    if(SEAL_USE_INTEL_HEXL_FPGA)
+        set(HEXL_CPU OFF CACHE BOOL "" FORCE)
+    else()
+        set(HEXL_CPU ON CACHE BOOL "" FORCE)
+    endif()
     set(EXCLUDE_FROM_ALL TRUE)
 
     mark_as_advanced(BUILD_HEXL)

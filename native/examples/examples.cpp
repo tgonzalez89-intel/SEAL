@@ -2,12 +2,19 @@
 // Licensed under the MIT license.
 
 #include "examples.h"
+#ifdef HEXL_FPGA
+#include "hexl-fpga.h"
+#endif
 
 using namespace std;
 using namespace seal;
 
 int main()
 {
+#ifdef HEXL_FPGA
+    intel::hexl::acquire_FPGA_resources();
+#endif
+
     cout << "Microsoft SEAL version: " << SEAL_VERSION << endl;
     while (true)
     {
@@ -95,6 +102,10 @@ int main()
             return 0;
         }
     }
+
+#ifdef HEXL_FPGA
+    intel::hexl::release_FPGA_resources();
+#endif
 
     return 0;
 }
