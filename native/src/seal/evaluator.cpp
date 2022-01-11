@@ -2144,6 +2144,29 @@ namespace seal
         auto &key_vector = kswitch_keys.data()[kswitch_keys_index];
         size_t key_component_count = key_vector[0].data().size();
 
+#ifdef SEAL_USE_INTEL_HEXL
+        if (scheme == scheme_type::ckks)
+        {
+            // Prep for call to HEXL
+            std::vector<const uint64_t *> hexl_key_vectors;
+            for (auto &each_key : key_vector)
+            {
+                // Check only the used component in KSwitchKeys.
+                if (!is_metadata_valid_for(each_key, context_) || !is_buffer_valid(each_key))
+                {
+                    throw invalid_argument("kswitch_keys is not valid for encryption parameters");
+                }
+                hexl_key_vectors.push_back(&each_key.data()[0]);
+            }
+            const uint64_t *t_target_iter_ptr = &(*target_iter)[0];
+
+            intel::hexl::CkksSwitchKey(
+                encrypted.data(), t_target_iter_ptr, coeff_count, decomp_modulus_size, key_modulus_size,
+                rns_modulus_size, key_component_count, key_context_data.small_ntt_tables_moduli().data(), hexl_key_vectors.data(),
+                key_context_data.modswitch_factors().data());
+            return;
+        }
+#else
         // Check only the used component in KSwitchKeys.
         for (auto &each_key : key_vector)
         {
@@ -2151,35 +2174,6 @@ namespace seal
             {
                 throw invalid_argument("kswitch_keys is not valid for encryption parameters");
             }
-        }
-
-#ifdef SEAL_USE_INTEL_HEXL
-        if (scheme == scheme_type::ckks)
-        {
-            // Prep for call to HEXL
-            std::vector<uint64_t> hexl_moduli;
-            std::vector<uint64_t> hexl_modswitch_factors;
-
-            for (size_t l = 0; l < key_modulus_size; ++l)
-            {
-                uint64_t hexl_key_modulus = key_ntt_tables[l].modulus().value();
-                uint64_t hexl_key_root_of_unity = key_ntt_tables[l].get_root();
-                hexl_moduli.push_back(hexl_key_modulus);
-                hexl_modswitch_factors.push_back(modswitch_factors[l].operand);
-            }
-
-            std::vector<const uint64_t *> hexl_key_vectors;
-            for (auto &each_key : key_vector)
-            {
-                hexl_key_vectors.push_back(&each_key.data()[0]);
-            }
-            const uint64_t *t_target_iter_ptr = &(*target_iter)[0];
-
-            intel::hexl::CkksSwitchKey(
-                encrypted.data(), t_target_iter_ptr, coeff_count, decomp_modulus_size, key_modulus_size,
-                rns_modulus_size, key_component_count, hexl_moduli.data(), hexl_key_vectors.data(),
-                hexl_modswitch_factors.data());
-            return;
         }
 #endif
 

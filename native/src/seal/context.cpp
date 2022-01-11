@@ -132,7 +132,7 @@ namespace seal
         }
     }
 
-    SEALContext::ContextData SEALContext::validate(EncryptionParameters parms)
+    SEALContext::ContextData SEALContext::validate(EncryptionParameters parms, bool prep_key_data)
     {
         ContextData context_data(parms, pool_);
         context_data.qualifiers_.parameter_error = error_type::success;
@@ -241,6 +241,19 @@ namespace seal
         try
         {
             CreateNTTTables(coeff_count_power, coeff_modulus, context_data.small_ntt_tables_, pool_);
+
+            if (prep_key_data)
+            {
+                auto &parms = context_data.parms();
+                auto &modulus = parms.coeff_modulus();
+                size_t modulus_size = modulus.size();
+                auto ntt_tables = iter(context_data.small_ntt_tables());
+                for (size_t l = 0; l < modulus_size; ++l)
+                {
+                    uint64_t modulus = ntt_tables[l].modulus().value();
+                    context_data.small_ntt_tables_moduli_.push_back(modulus);
+                }
+            }
         }
         catch (const invalid_argument &)
         {
@@ -396,6 +409,20 @@ namespace seal
         {
             context_data.rns_tool_ =
                 allocate<RNSTool>(pool_, poly_modulus_degree, *coeff_modulus_base, plain_modulus, pool_);
+
+            if (prep_key_data)
+            {
+                auto &parms = context_data.parms();
+                auto &modulus = parms.coeff_modulus();
+                size_t modulus_size = modulus.size();
+                auto modswitch_factors = context_data.rns_tool()->inv_q_last_mod_q();
+                for (size_t l = 0; l < modulus_size; ++l)
+                {
+                    auto factor = modswitch_factors[l];
+                    auto operand = factor.operand;
+                    context_data.modswitch_factors_.push_back(operand);
+                }
+            }
         }
         catch (const exception &)
         {
@@ -470,7 +497,7 @@ namespace seal
         // Note that this happens even if parameters are not valid
 
         // First create key_parms_id_.
-        context_data_map_.emplace(make_pair(parms.parms_id(), make_shared<const ContextData>(validate(parms))));
+        context_data_map_.emplace(make_pair(parms.parms_id(), make_shared<const ContextData>(validate(parms, true))));
         key_parms_id_ = parms.parms_id();
 
         // Then create first_parms_id_ if the parameters are valid and there is

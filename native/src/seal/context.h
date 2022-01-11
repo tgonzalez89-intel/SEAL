@@ -434,6 +434,22 @@ namespace seal
                 return chain_index_;
             }
 
+            /**
+            Returns the moduli of small_ntt_tables
+            */
+            SEAL_NODISCARD inline auto small_ntt_tables_moduli() const noexcept
+            {
+                return small_ntt_tables_moduli_;
+            }
+
+            /**
+            Returns the modswitch factors
+            */
+            SEAL_NODISCARD inline auto modswitch_factors() const noexcept
+            {
+                return modswitch_factors_;
+            }
+
         private:
             ContextData(EncryptionParameters parms, MemoryPoolHandle pool) : pool_(std::move(pool)), parms_(parms)
             {
@@ -478,6 +494,10 @@ namespace seal
             std::shared_ptr<const ContextData> next_context_data_{ nullptr };
 
             std::size_t chain_index_ = 0;
+
+            std::vector<uint64_t> small_ntt_tables_moduli_{};
+
+            std::vector<uint64_t> modswitch_factors_{};
         };
 
         /**
@@ -647,7 +667,7 @@ namespace seal
         */
         SEALContext(EncryptionParameters parms, bool expand_mod_chain, sec_level_type sec_level, MemoryPoolHandle pool);
 
-        ContextData validate(EncryptionParameters parms);
+        ContextData validate(EncryptionParameters parms, bool prep_key_data = false);
 
         /**
         Create the next context_data by dropping the last element from coeff_modulus.

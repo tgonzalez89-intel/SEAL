@@ -28,7 +28,7 @@ seal_wasm.wasm
 # Build
 bin/
 lib/
-build/
+build*/
 install/
 *.build
 env
