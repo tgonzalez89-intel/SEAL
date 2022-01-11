@@ -2162,8 +2162,8 @@ namespace seal
 
             intel::hexl::CkksSwitchKey(
                 encrypted.data(), t_target_iter_ptr, coeff_count, decomp_modulus_size, key_modulus_size,
-                rns_modulus_size, key_component_count, key_context_data.small_ntt_tables_moduli().data(), hexl_key_vectors.data(),
-                key_context_data.modswitch_factors().data());
+                rns_modulus_size, key_component_count, key_context_data.small_ntt_tables_moduli().data(),
+                hexl_key_vectors.data(), key_context_data.modswitch_factors().data());
             return;
         }
 #else

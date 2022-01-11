@@ -23,12 +23,12 @@ export FPGA_DEBUG=1
 # Note: .aocx files containing the bitstreams must be in the same directory as the executable.
 */
 
+#include "seal/seal.h"
 #include <algorithm>
 #include <chrono>
 #include <iostream>
 #include <sstream>
 #include <vector>
-#include "seal/seal.h"
 #include "gflags/gflags.h"
 #ifdef HEXL_FPGA
 #include "hexl-fpga.h"
@@ -36,7 +36,11 @@ export FPGA_DEBUG=1
 
 using namespace seal;
 
-enum class mode_type {test, bench};
+enum class mode_type
+{
+    test,
+    bench
+};
 
 /*
 Helper function: Prints the parameters in a SEALContext.
@@ -134,7 +138,8 @@ void print_parameters(const mode_type mode, const SEALContext &context, const do
     std::cout << "\\" << std::endl << std::endl;
 }
 
-void run_internal(const mode_type mode, const SEALContext &context, const double scale, long data_bound, const unsigned bench_time)
+void run_internal(
+    const mode_type mode, const SEALContext &context, const double scale, long data_bound, const unsigned bench_time)
 {
     std::chrono::high_resolution_clock::time_point time_start, time_end;
 
@@ -188,11 +193,13 @@ void run_internal(const mode_type mode, const SEALContext &context, const double
     std::vector<double> pod_vector;
     std::random_device rd;
     std::mt19937 gen(rd());
-    if (data_bound == 0) {
+    if (data_bound == 0)
+    {
         auto &context_data = *context.key_context_data();
         auto coeff_modulus = context_data.parms().coeff_modulus();
         std::vector<int> coeff_mod_bit_sizes;
-        for (auto&& mod : coeff_modulus) {
+        for (auto &&mod : coeff_modulus)
+        {
             coeff_mod_bit_sizes.push_back(mod.bit_count());
         }
         auto data_bound_bit_size = *std::min_element(coeff_mod_bit_sizes.cbegin(), coeff_mod_bit_sizes.cend()) / 2;
@@ -254,22 +261,31 @@ void run_internal(const mode_type mode, const SEALContext &context, const double
 
         // Print a dot to indicate progress.
         std::cout << "\b\b\b";
-        for (auto i = 0; i < 3; ++i) {
-            if (i < print_count) std::cout << ".";
-            else std::cout << " ";
+        for (auto i = 0; i < 3; ++i)
+        {
+            if (i < print_count)
+                std::cout << ".";
+            else
+                std::cout << " ";
         }
-        if (print_dir) {
+        if (print_dir)
+        {
             ++print_count;
-            if (print_count >= 3) print_dir = false;
+            if (print_count >= 3)
+                print_dir = false;
         }
-        else {
+        else
+        {
             --print_count;
-            if (print_count <= 0) print_dir = true;
+            if (print_count <= 0)
+                print_dir = true;
         }
         std::cout.flush();
 
         ++count;
-    } while (mode == mode_type::bench && std::chrono::duration_cast<std::chrono::seconds>(std::chrono::high_resolution_clock::now()-test_time_start).count() < bench_time);
+    } while (mode == mode_type::bench && std::chrono::duration_cast<std::chrono::seconds>(
+                                             std::chrono::high_resolution_clock::now() - test_time_start)
+                                                 .count() < bench_time);
 
     std::cout << "\b\b\b";
     std::cout << "...";
@@ -289,9 +305,10 @@ void run_internal(const mode_type mode, const SEALContext &context, const double
     }
     std::cout << std::endl;
 
-    if (mode == mode_type::bench) return;
+    if (mode == mode_type::bench)
+        return;
 
-    std::transform(pod_vector.begin(), pod_vector.end(), pod_vector.begin(), [](double d){return d*d;});
+    std::transform(pod_vector.begin(), pod_vector.end(), pod_vector.begin(), [](double d) { return d * d; });
     std::rotate(pod_vector.begin(), pod_vector.begin() + 1, pod_vector.end());
     std::rotate(pod_vector.rbegin(), pod_vector.rbegin() + 1, pod_vector.rend());
 
@@ -304,15 +321,22 @@ void run_internal(const mode_type mode, const SEALContext &context, const double
     std::vector<double> pod_vector2;
     encoder.decode(plain2, pod_vector2);
 
-    if (pod_vector.size() != pod_vector2.size()) {
-        std::cout << "ERROR: Functionally incorrect: Input and ouput vectors have different sizes." << std::endl << std::endl;
+    if (pod_vector.size() != pod_vector2.size())
+    {
+        std::cout << "ERROR: Functionally incorrect: Input and ouput vectors have different sizes." << std::endl
+                  << std::endl;
         return;
     }
 
-    for (size_t i = 0; i < pod_vector.size(); ++i) {
-        if (std::abs(pod_vector[i] - pod_vector2[i]) >= 0.5) {
-            std::cout << "expected[" << i << "]=" << pod_vector[i] << " output[" << i << "]=" << pod_vector2[i] <<  std::endl;
-            std::cout << "ERROR: Functionally incorrect: One or more values differ between expected and output." << std::endl << std::endl;
+    for (size_t i = 0; i < pod_vector.size(); ++i)
+    {
+        if (std::abs(pod_vector[i] - pod_vector2[i]) >= 0.5)
+        {
+            std::cout << "expected[" << i << "]=" << pod_vector[i] << " output[" << i << "]=" << pod_vector2[i]
+                      << std::endl;
+            std::cout << "ERROR: Functionally incorrect: One or more values differ between expected and output."
+                      << std::endl
+                      << std::endl;
             return;
         }
     }
@@ -320,114 +344,150 @@ void run_internal(const mode_type mode, const SEALContext &context, const double
     std::cout << "SUCCESS: Test passed." << std::endl << std::endl;
 }
 
-void run(const mode_type mode, const size_t poly_modulus_degree, const std::vector<int> &coeff_mod_bit_sizes, const unsigned scale_bit_size, const sec_level_type sec_lvl, const long data_bound, const unsigned bench_time)
+void run(
+    const mode_type mode, const size_t poly_modulus_degree, const std::vector<int> &coeff_mod_bit_sizes,
+    const unsigned scale_bit_size, const sec_level_type sec_lvl, const long data_bound, const unsigned bench_time)
 {
     EncryptionParameters params(scheme_type::ckks);
     params.set_poly_modulus_degree(poly_modulus_degree);
-    if (mode == mode_type::bench && coeff_mod_bit_sizes.size() == 1 && coeff_mod_bit_sizes[0] == 0) {
+    if (mode == mode_type::bench && coeff_mod_bit_sizes.size() == 1 && coeff_mod_bit_sizes[0] == 0)
+    {
         // For benchmarking, BFVDefault primes are good enough.
         params.set_coeff_modulus(CoeffModulus::BFVDefault(poly_modulus_degree));
     }
-    else {
+    else
+    {
         params.set_coeff_modulus(CoeffModulus::Create(poly_modulus_degree, coeff_mod_bit_sizes));
     }
 
     double scale;
-    if (mode == mode_type::bench && scale_bit_size == 0) {
+    if (mode == mode_type::bench && scale_bit_size == 0)
+    {
         // For benchmarking setting the scale as the square root of the last coeff_modulus prime is good enough.
         scale = std::sqrt(static_cast<double>(params.coeff_modulus().back().value()));
     }
-    else {
+    else
+    {
         scale = static_cast<double>(1UL << scale_bit_size);
     }
 
     SEALContext context(params, true, sec_lvl);
 
-    if (mode == mode_type::test) {
+    if (mode == mode_type::test)
+    {
         run_internal(mode_type::test, context, scale, data_bound, 0);
     }
-    else if (mode == mode_type::bench) {
+    else if (mode == mode_type::bench)
+    {
         run_internal(mode_type::bench, context, scale, data_bound, bench_time);
     }
 }
 
 DEFINE_string(mode, "test", "Run mode. Must be either test or bench.");
-//DEFINE_string(scheme, "ckks", "HE scheme. Must be either ckks or bfv.");
-DEFINE_uint32(poly_modulus_degree, 8192, "Degree of the polynomial modulus. Must be a power of 2 between 1024 and 32768.");
-DEFINE_string(coeff_mod_bit_sizes, "0", "Cefficient modulus. Comma-separated list of bit-lengths of the primes to be generated. Values must be between 1 and 60. The default (0) is valid only for benchmark mode and uses the BFVDefault primes at a security level of 128.");
-DEFINE_uint32(scale_bit_size, 0, "Bit-length for the scaling parameter, which defines encoding precision. Scale will be set as 2^scale_bit_size."/* Only applies to the CKKS scheme.*/" Must be between 1 and 60. The default (0) is valid only for benchmark mode and sets it to the square root of the last prime of the coefficient modulus.");
-//DEFINE_uint64(plain_modulus, 786433, "Plaintext modulus. Only applies to the BFV scheme. Must be at most 60 bits long.");
+// DEFINE_string(scheme, "ckks", "HE scheme. Must be either ckks or bfv.");
+DEFINE_uint32(
+    poly_modulus_degree, 8192, "Degree of the polynomial modulus. Must be a power of 2 between 1024 and 32768.");
+DEFINE_string(
+    coeff_mod_bit_sizes, "0",
+    "Cefficient modulus. Comma-separated list of bit-lengths of the primes to be generated. Values must be between 1 "
+    "and 60. The default (0) is valid only for benchmark mode and uses the BFVDefault primes at a security level of "
+    "128.");
+DEFINE_uint32(
+    scale_bit_size, 0,
+    "Bit-length for the scaling parameter, which defines encoding precision. Scale will be set as 2^scale_bit_size." /* Only applies to the CKKS scheme.*/
+    " Must be between 1 and 60. The default (0) is valid only for benchmark mode and sets it to the square root of the "
+    "last prime of the coefficient modulus.");
+// DEFINE_uint64(plain_modulus, 786433, "Plaintext modulus. Only applies to the BFV scheme. Must be at most 60 bits
+// long.");
 DEFINE_uint32(security_lvl, 0, "Security level. One of {0, 128, 192, 256}.");
-DEFINE_int64(data_bound, 0, "Limit for the random data generated for the test input vector. Simetric in the positive and negative axes. The default (0) sets it to a power of two, where the power is the minimum of coeff_mod_bit_sizes, divided by two.");
-DEFINE_uint32(bench_time, 30, "Minimum run time, in seconds, when running in benchmark mode. Must be between 1 and 3600.");
+DEFINE_int64(
+    data_bound, 0,
+    "Limit for the random data generated for the test input vector. Simetric in the positive and negative axes. The "
+    "default (0) sets it to a power of two, where the power is the minimum of coeff_mod_bit_sizes, divided by two.");
+DEFINE_uint32(
+    bench_time, 30, "Minimum run time, in seconds, when running in benchmark mode. Must be between 1 and 3600.");
 
 int main(int argc, char *argv[])
 {
     gflags::ParseCommandLineFlags(&argc, &argv, true);
 
     mode_type mode;
-    if (FLAGS_mode == "test") {
+    if (FLAGS_mode == "test")
+    {
         mode = mode_type::test;
     }
-    else if (FLAGS_mode == "bench") {
+    else if (FLAGS_mode == "bench")
+    {
         mode = mode_type::bench;
     }
-    else {
+    else
+    {
         std::cout << "ERROR: mode must be either test or bench." << std::endl;
         return EXIT_FAILURE;
     }
-    if (FLAGS_bench_time < 1 || FLAGS_bench_time > 3600) {
+    if (FLAGS_bench_time < 1 || FLAGS_bench_time > 3600)
+    {
         std::cout << "ERROR: bench_time must be between 1 and 3600." << std::endl;
         return EXIT_FAILURE;
     }
     if (FLAGS_poly_modulus_degree < 1024 || FLAGS_poly_modulus_degree > 32768 ||
-    FLAGS_poly_modulus_degree & (FLAGS_poly_modulus_degree - 1) == 0) {
+        FLAGS_poly_modulus_degree & (FLAGS_poly_modulus_degree - 1) == 0)
+    {
         std::cout << "ERROR: poly_modulus_degree must be a power of 2 between 1024 and 32768." << std::endl;
         return EXIT_FAILURE;
     }
     std::vector<int> coeff_mod_bit_sizes;
     std::stringstream ss(FLAGS_coeff_mod_bit_sizes);
-    for (int i; ss >> i;) {
+    for (int i; ss >> i;)
+    {
         coeff_mod_bit_sizes.push_back(i);
-        if (ss.peek() == ',') ss.ignore();
+        if (ss.peek() == ',')
+            ss.ignore();
     }
-    if (coeff_mod_bit_sizes.size() == 0) {
+    if (coeff_mod_bit_sizes.size() == 0)
+    {
         std::cout << "ERROR: coeff_mod_bit_sizes must contain at least one element." << std::endl;
         return EXIT_FAILURE;
     }
-    for (int val : coeff_mod_bit_sizes) {
-        if (val < 0 || val > 60 || (val == 0 && (mode != mode_type::bench || coeff_mod_bit_sizes.size() != 1))) {
+    for (int val : coeff_mod_bit_sizes)
+    {
+        if (val < 0 || val > 60 || (val == 0 && (mode != mode_type::bench || coeff_mod_bit_sizes.size() != 1)))
+        {
             std::cout << "ERROR: coeff_mod_bit_sizes values must be between 1 and 60." << std::endl;
             return EXIT_FAILURE;
         }
     }
-    if ((FLAGS_scale_bit_size == 0 && mode != mode_type::bench) || FLAGS_scale_bit_size > 60) {
+    if ((FLAGS_scale_bit_size == 0 && mode != mode_type::bench) || FLAGS_scale_bit_size > 60)
+    {
         std::cout << "ERROR: scale_bit_size must be between 1 and 60." << std::endl;
         return EXIT_FAILURE;
     }
     sec_level_type sec_lvl;
-    switch (FLAGS_security_lvl) {
-        case 0:
-            sec_lvl = sec_level_type::none;
-            break;
-        case 128:
-            sec_lvl = sec_level_type::tc128;
-            break;
-        case 192:
-            sec_lvl = sec_level_type::tc192;
-            break;
-        case 256:
-            sec_lvl = sec_level_type::tc256;
-            break;
-        default:
-            std::cout << "ERROR: security_lvl must be one of {0, 128, 192, 256}." << std::endl;
-            return EXIT_FAILURE;
+    switch (FLAGS_security_lvl)
+    {
+    case 0:
+        sec_lvl = sec_level_type::none;
+        break;
+    case 128:
+        sec_lvl = sec_level_type::tc128;
+        break;
+    case 192:
+        sec_lvl = sec_level_type::tc192;
+        break;
+    case 256:
+        sec_lvl = sec_level_type::tc256;
+        break;
+    default:
+        std::cout << "ERROR: security_lvl must be one of {0, 128, 192, 256}." << std::endl;
+        return EXIT_FAILURE;
     }
-    if (FLAGS_data_bound < 0) {
+    if (FLAGS_data_bound < 0)
+    {
         std::cout << "ERROR: data_bound can't be negative." << std::endl;
         return EXIT_FAILURE;
     }
-    if (FLAGS_bench_time < 1 || FLAGS_bench_time > 3600) {
+    if (FLAGS_bench_time < 1 || FLAGS_bench_time > 3600)
+    {
         std::cout << "ERROR: bench_time must be between 1 and 3600." << std::endl;
         return EXIT_FAILURE;
     }
@@ -435,7 +495,8 @@ int main(int argc, char *argv[])
 #ifdef HEXL_FPGA
     intel::hexl::acquire_FPGA_resources();
 #endif
-    run(mode, FLAGS_poly_modulus_degree, coeff_mod_bit_sizes, FLAGS_scale_bit_size, sec_lvl, FLAGS_data_bound, FLAGS_bench_time);
+    run(mode, FLAGS_poly_modulus_degree, coeff_mod_bit_sizes, FLAGS_scale_bit_size, sec_lvl, FLAGS_data_bound,
+        FLAGS_bench_time);
 #ifdef HEXL_FPGA
     intel::hexl::release_FPGA_resources();
 #endif
