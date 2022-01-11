@@ -12,6 +12,9 @@
 #include <algorithm>
 #include <cmath>
 #include <functional>
+#ifdef SEAL_USE_INTEL_HEXL
+#include "hexl/hexl.hpp"
+#endif
 
 using namespace std;
 using namespace seal::util;
@@ -481,6 +484,19 @@ namespace seal
             throw logic_error("invalid parameters");
         }
 
+#ifdef SEAL_USE_INTEL_HEXL
+        if (dest_size != 3)
+        {
+            throw logic_error("HEXL ckks multiply requires dest_size == 3");
+        }
+
+        // Prepare destination
+        encrypted1.resize(context_, context_data.parms_id(), dest_size);
+
+        intel::hexl::DyadicMultiply(
+            encrypted1.data(), encrypted1.data(), encrypted2.data(), coeff_count, parms.coeff_modulus_values().data(),
+            coeff_modulus_size);
+#else
         // Set up iterator for the base
         auto coeff_modulus = iter(parms.coeff_modulus());
 
@@ -588,6 +604,7 @@ namespace seal
             // Set the final result
             set_poly_array(temp, dest_size, coeff_count, coeff_modulus_size, encrypted1.data());
         }
+#endif
 
         // Set the scale
         encrypted1.scale() = new_scale;
@@ -2135,6 +2152,36 @@ namespace seal
                 throw invalid_argument("kswitch_keys is not valid for encryption parameters");
             }
         }
+
+#ifdef SEAL_USE_INTEL_HEXL
+        if (scheme == scheme_type::ckks)
+        {
+            // Prep for call to HEXL
+            std::vector<uint64_t> hexl_moduli;
+            std::vector<uint64_t> hexl_modswitch_factors;
+
+            for (size_t l = 0; l < key_modulus_size; ++l)
+            {
+                uint64_t hexl_key_modulus = key_ntt_tables[l].modulus().value();
+                uint64_t hexl_key_root_of_unity = key_ntt_tables[l].get_root();
+                hexl_moduli.push_back(hexl_key_modulus);
+                hexl_modswitch_factors.push_back(modswitch_factors[l].operand);
+            }
+
+            std::vector<const uint64_t *> hexl_key_vectors;
+            for (auto &each_key : key_vector)
+            {
+                hexl_key_vectors.push_back(&each_key.data()[0]);
+            }
+            const uint64_t *t_target_iter_ptr = &(*target_iter)[0];
+
+            intel::hexl::CkksSwitchKey(
+                encrypted.data(), t_target_iter_ptr, coeff_count, decomp_modulus_size, key_modulus_size,
+                rns_modulus_size, key_component_count, hexl_moduli.data(), hexl_key_vectors.data(),
+                hexl_modswitch_factors.data());
+            return;
+        }
+#endif
 
         // Create a copy of target_iter
         SEAL_ALLOCATE_GET_RNS_ITER(t_target, coeff_count, decomp_modulus_size, pool);
