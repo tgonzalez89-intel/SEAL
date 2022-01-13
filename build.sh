@@ -19,7 +19,7 @@ cmake -S . -B build \
 -DSEAL_USE_INTEL_HEXL=ON \
 -DSEAL_USE_INTEL_HEXL_FPGA=OFF \
 -DHEXL_EXPERIMENTAL=ON \
--DHEXL_DUMP_JSON=OFF
+-DHEXL_DUMP_JSON=ON
 
 cmake --build build -j
 #cmake --install build
