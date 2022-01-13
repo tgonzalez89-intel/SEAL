@@ -1261,6 +1261,6 @@ namespace seal
 
         SEALContext context_;
 
-        std::vector<const uint64_t *> key_vector_raw_cached{nullptr};
+        std::vector<const uint64_t *> key_vector_raw_cached{ nullptr };
     };
 } // namespace seal

@@ -2150,7 +2150,7 @@ namespace seal
             auto key_vector_raw_ptr = key_vector_raw_cached[0];
             if (key_vector_raw_ptr != &key_vector.data()[0].data()[0])
             {
-                const_cast<Evaluator*>(this)->key_vector_raw_cached.clear();
+                const_cast<Evaluator *>(this)->key_vector_raw_cached.clear();
             }
             // Prep for call to HEXL
             for (auto &each_key : key_vector)
@@ -2162,7 +2162,7 @@ namespace seal
                 }
                 if (key_vector_raw_ptr != &key_vector.data()[0].data()[0])
                 {
-                    const_cast<Evaluator*>(this)->key_vector_raw_cached.push_back(&each_key.data()[0]);
+                    const_cast<Evaluator *>(this)->key_vector_raw_cached.push_back(&each_key.data()[0]);
                 }
             }
             const uint64_t *t_target_iter_ptr = &(*target_iter)[0];
@@ -2170,7 +2170,8 @@ namespace seal
             intel::hexl::CkksSwitchKey(
                 encrypted.data(), t_target_iter_ptr, coeff_count, decomp_modulus_size, key_modulus_size,
                 rns_modulus_size, key_component_count, key_context_data.small_ntt_tables_moduli().data(),
-                const_cast<Evaluator*>(this)->key_vector_raw_cached.data(), key_context_data.modswitch_factors().data());
+                const_cast<Evaluator *>(this)->key_vector_raw_cached.data(),
+                key_context_data.modswitch_factors().data());
             return;
         }
 #else
