@@ -1260,5 +1260,7 @@ namespace seal
         void multiply_plain_ntt(Ciphertext &encrypted_ntt, const Plaintext &plain_ntt) const;
 
         SEALContext context_;
+
+        std::vector<const uint64_t *> key_vector_raw_cached{nullptr};
     };
 } // namespace seal
