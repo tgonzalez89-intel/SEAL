@@ -254,7 +254,7 @@ void run_internal(
             // [Rotate Vector]
             time_start = std::chrono::high_resolution_clock::now();
             evaluator.rotate_vector_inplace(encrypted, 1, gal_keys);
-            evaluator.rotate_vector_inplace(encrypted, -1, gal_keys);
+            // evaluator.rotate_vector_inplace(encrypted, -1, gal_keys);
             time_end = std::chrono::high_resolution_clock::now();
             time_rotate_one_step_sum += std::chrono::duration_cast<std::chrono::microseconds>(time_end - time_start);
         }
@@ -310,7 +310,7 @@ void run_internal(
 
     std::transform(pod_vector.begin(), pod_vector.end(), pod_vector.begin(), [](double d) { return d * d; });
     std::rotate(pod_vector.begin(), pod_vector.begin() + 1, pod_vector.end());
-    std::rotate(pod_vector.rbegin(), pod_vector.rbegin() + 1, pod_vector.rend());
+    // std::rotate(pod_vector.rbegin(), pod_vector.rbegin() + 1, pod_vector.rend());
 
     // [Decryption]
     Plaintext plain2;

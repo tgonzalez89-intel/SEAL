@@ -2147,31 +2147,47 @@ namespace seal
 #ifdef SEAL_USE_INTEL_HEXL
         if (scheme == scheme_type::ckks)
         {
-            auto key_vector_raw_ptr = key_vector_raw_cached[0];
-            if (key_vector_raw_ptr != &key_vector.data()[0].data()[0])
+            // ptr to the 1st key in key_vector
+            auto key_vector_data = key_vector.data();
+            // ciphertext of the 1st key in key_vector
+            auto &key_cipher = key_vector_data->data();
+            // ptr to the 1st uint64 in the ciphertext of the 1st key in key_vector
+            auto key_cipher_data = key_cipher.data();
+
+            auto cache_new_key_vector = !key_vector_cache.count(key_cipher_data);
+            std::vector<const uint64_t *> key_vector_raw;
+            auto key_vector_raw_ptr = &key_vector_raw;
+            if (!cache_new_key_vector)
             {
-                const_cast<Evaluator *>(this)->key_vector_raw_cached.clear();
+                key_vector_raw_ptr = &const_cast<Evaluator *>(this)->key_vector_cache.at(key_cipher_data);
             }
-            // Prep for call to HEXL
-            for (auto &each_key : key_vector)
+            for (auto &curr_key : key_vector)
             {
                 // Check only the used component in KSwitchKeys.
-                if (!is_metadata_valid_for(each_key, context_) || !is_buffer_valid(each_key))
+                if (!is_metadata_valid_for(curr_key, context_) || !is_buffer_valid(curr_key))
                 {
                     throw invalid_argument("kswitch_keys is not valid for encryption parameters");
                 }
-                if (key_vector_raw_ptr != &key_vector.data()[0].data()[0])
+                if (cache_new_key_vector)
                 {
-                    const_cast<Evaluator *>(this)->key_vector_raw_cached.push_back(&each_key.data()[0]);
+                    auto &curr_key_cipher = curr_key.data();
+                    auto curr_key_cipher_data = curr_key_cipher.data();
+                    key_vector_raw_ptr->push_back(curr_key_cipher_data);
                 }
             }
+
             const uint64_t *t_target_iter_ptr = &(*target_iter)[0];
 
             intel::hexl::CkksSwitchKey(
                 encrypted.data(), t_target_iter_ptr, coeff_count, decomp_modulus_size, key_modulus_size,
                 rns_modulus_size, key_component_count, key_context_data.small_ntt_tables_moduli().data(),
-                const_cast<Evaluator *>(this)->key_vector_raw_cached.data(),
-                key_context_data.modswitch_factors().data());
+                key_vector_raw_ptr->data(), key_context_data.modswitch_factors().data());
+
+            if (cache_new_key_vector)
+            {
+                const_cast<Evaluator *>(this)->key_vector_cache.emplace(key_cipher_data, std::move(key_vector_raw));
+            }
+
             return;
         }
 #else
