@@ -1262,5 +1262,10 @@ namespace seal
         SEALContext context_;
 
         std::unordered_map<const uint64_t *, std::vector<const uint64_t *>> key_vector_cache;
+
+        std::vector<uint64_t> root_of_unity_powers_ptr;
+        size_t N_cached;
+        uint64_t key_modulus_size_cached;
+        std::vector<uint64_t> moduli_cached;
     };
 } // namespace seal

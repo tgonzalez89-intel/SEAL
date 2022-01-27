@@ -9,6 +9,7 @@
 #include "seal/util/polycore.h"
 #include "seal/util/scalingvariant.h"
 #include "seal/util/uintarith.h"
+#include "seal/util/intel_seal_ext.h"
 #include <algorithm>
 #include <cmath>
 #include <functional>
@@ -2154,7 +2155,7 @@ namespace seal
             // ptr to the 1st uint64 in the ciphertext of the 1st key in key_vector
             auto key_cipher_data = key_cipher.data();
 
-            auto cache_new_key_vector = !key_vector_cache.count(key_cipher_data);
+            bool cache_new_key_vector = !key_vector_cache.count(key_cipher_data);
             std::vector<const uint64_t *> key_vector_raw;
             auto key_vector_raw_ptr = &key_vector_raw;
             if (!cache_new_key_vector)
@@ -2178,10 +2179,42 @@ namespace seal
 
             const uint64_t *t_target_iter_ptr = &(*target_iter)[0];
 
+            auto N = parms.poly_modulus_degree();
+            if (N != N_cached || key_modulus_size != key_modulus_size_cached) {
+                std::cout << "DEBUG: N=" << N << '\n';
+                std::cout << "DEBUG: key_modulus_size=" << key_modulus_size << '\n';
+                std::vector<uint64_t> moduli;
+                for (auto &&current_key_modulus : key_modulus)
+                {
+                    moduli.push_back(current_key_modulus.value());
+                }
+                if (moduli != moduli_cached) {
+                    const_cast<Evaluator *>(this)->root_of_unity_powers_ptr.resize(key_modulus_size * N * 4);
+                    for (size_t i = 0; i < key_modulus_size; ++i)
+                    {
+                        auto modulus = key_modulus[i].value();
+                        auto root = key_ntt_tables[i].get_root();
+                        std::cout << "DEBUG: i=" << i << '\n';
+                        std::cout << "DEBUG: modulus=" << modulus << '\n';
+                        std::cout << "DEBUG: root=" << root << "\n";
+                        auto &ntt = intel::seal_ext::get_ntt(N, modulus, root);
+                        auto root_of_unity_powers = ntt.GetRootOfUnityPowers().data();
+                        auto precon64_root_of_unity_powers = ntt.GetPrecon64RootOfUnityPowers().data();
+                        auto inv_root_of_unity_powers = ntt.GetInvRootOfUnityPowers().data();
+                        auto precon64_inv_root_of_unity_powers = ntt.GetPrecon64InvRootOfUnityPowers().data();
+                        memcpy(&const_cast<Evaluator *>(this)->root_of_unity_powers_ptr[i*N*4 + N*0], inv_root_of_unity_powers, N);
+                        memcpy(&const_cast<Evaluator *>(this)->root_of_unity_powers_ptr[i*N*4 + N*1], precon64_inv_root_of_unity_powers, N);
+                        memcpy(&const_cast<Evaluator *>(this)->root_of_unity_powers_ptr[i*N*4 + N*2], root_of_unity_powers, N);
+                        memcpy(&const_cast<Evaluator *>(this)->root_of_unity_powers_ptr[i*N*4 + N*3], precon64_root_of_unity_powers, N);
+                    }
+                    const_cast<Evaluator *>(this)->moduli_cached = std::move(moduli);
+                }
+            }
+
             intel::hexl::CkksSwitchKey(
                 encrypted.data(), t_target_iter_ptr, coeff_count, decomp_modulus_size, key_modulus_size,
                 rns_modulus_size, key_component_count, key_context_data.small_ntt_tables_moduli().data(),
-                key_vector_raw_ptr->data(), key_context_data.modswitch_factors().data());
+                key_vector_raw_ptr->data(), key_context_data.modswitch_factors().data(), const_cast<Evaluator *>(this)->root_of_unity_powers_ptr.data());
 
             if (cache_new_key_vector)
             {
