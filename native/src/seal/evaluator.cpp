@@ -2181,8 +2181,8 @@ namespace seal
 
             auto N = parms.poly_modulus_degree();
             if (N != N_cached || key_modulus_size != key_modulus_size_cached) {
-                std::cout << "DEBUG: N=" << N << '\n';
-                std::cout << "DEBUG: key_modulus_size=" << key_modulus_size << '\n';
+                // std::cout << "DEBUG: N=" << N << '\n';
+                // std::cout << "DEBUG: key_modulus_size=" << key_modulus_size << '\n';
                 std::vector<uint64_t> moduli;
                 for (auto &&current_key_modulus : key_modulus)
                 {
@@ -2194,9 +2194,9 @@ namespace seal
                     {
                         auto modulus = key_modulus[i].value();
                         auto root = key_ntt_tables[i].get_root();
-                        std::cout << "DEBUG: i=" << i << '\n';
-                        std::cout << "DEBUG: modulus=" << modulus << '\n';
-                        std::cout << "DEBUG: root=" << root << "\n";
+                        // std::cout << "DEBUG: i=" << i << '\n';
+                        // std::cout << "DEBUG: modulus=" << modulus << '\n';
+                        // std::cout << "DEBUG: root=" << root << "\n";
                         auto &ntt = intel::seal_ext::get_ntt(N, modulus, root);
                         auto root_of_unity_powers = ntt.GetRootOfUnityPowers().data();
                         auto precon64_root_of_unity_powers = ntt.GetPrecon64RootOfUnityPowers().data();
