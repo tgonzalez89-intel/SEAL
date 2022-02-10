@@ -5,7 +5,7 @@ FetchContent_Declare(
     hexl
     PREFIX hexl
     GIT_REPOSITORY https://github.com/tgonzalez89-intel/hexl.git
-    GIT_TAG hexl-fpga-integration2
+    GIT_TAG hexl-fpga-integration3
 )
 FetchContent_GetProperties(hexl)
 

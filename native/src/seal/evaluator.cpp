@@ -2178,10 +2178,10 @@ namespace seal
 
             const uint64_t *t_target_iter_ptr = &(*target_iter)[0];
 
-            intel::hexl::CkksSwitchKey(
+            intel::hexl::KeySwitch(
                 encrypted.data(), t_target_iter_ptr, coeff_count, decomp_modulus_size, key_modulus_size,
                 rns_modulus_size, key_component_count, key_context_data.small_ntt_tables_moduli().data(),
-                key_vector_raw_ptr->data(), key_context_data.modswitch_factors().data());
+                key_vector_raw_ptr->data(), key_context_data.modswitch_factors().data(), nullptr);
 
             if (cache_new_key_vector)
             {

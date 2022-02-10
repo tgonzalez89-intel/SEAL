@@ -243,7 +243,7 @@ if(SEAL_USE_INTEL_HEXL)
         endif()
 
         if(SEAL_USE_INTEL_HEXL_FPGA)
-            find_package(hexl-fpga 1.0)
+            find_package(hexl-fpga 1.1)
             if (NOT TARGET hexl-fpga::hexl-fpga)
                 message(FATAL_ERROR "Intel HEXL-FPGA: not found")
             else()

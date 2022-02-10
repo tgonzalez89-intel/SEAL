@@ -12,18 +12,19 @@ cmake -S . -B build \
 -DSEAL_BUILD_TESTS=OFF \
 -DSEAL_BUILD_BENCH=OFF \
 -DSEAL_BUILD_DEPS=ON \
--DSEAL_USE_MSGSL=OFF \
+-DSEAL_USE_MSGSL=ON \
 -DSEAL_USE_ZLIB=OFF \
--DSEAL_USE_ZSTD=OFF \
+-DSEAL_USE_ZSTD=ON \
 -DBUILD_SHARED_LIBS=ON \
--DSEAL_USE_INTEL_HEXL=ON \
+-DSEAL_USE_INTEL_HEXL=OFF \
 -DSEAL_USE_INTEL_HEXL_FPGA=OFF \
 -DHEXL_EXPERIMENTAL=ON \
--DHEXL_DUMP_JSON=ON
+-DHEXL_DUMP_JSON=OFF
 
 cmake --build build -j
 #cmake --install build
 
 cd build/bin
-ln -s $(realpath ${PWD}/../../../hexl-fpga/install/fpga/hexl_fpga.aocx)
+#ln -s $(realpath ${PWD}/../../../he-fpga-bitstreams/bitstreams/hexl_fpga.aocx)
+#ln -s $(realpath ${PWD}/../../../pre/build/device/hexl_fpga.aocx)
 cd ../..

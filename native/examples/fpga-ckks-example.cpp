@@ -247,7 +247,13 @@ void run_internal(
             {
                 // [Relinearize]
                 time_start = std::chrono::high_resolution_clock::now();
+        #ifdef HEXL_FPGA
+                intel::hexl::set_worksize_KeySwitch(1);
+        #endif
                 evaluator.relinearize_inplace(encrypted, relin_keys);
+        #ifdef HEXL_FPGA
+                intel::hexl::KeySwitchCompleted();
+        #endif
                 time_end = std::chrono::high_resolution_clock::now();
                 time_relinearize_sum += std::chrono::duration_cast<std::chrono::microseconds>(time_end - time_start);
 
@@ -256,7 +262,13 @@ void run_internal(
 
                 // [Rotate Vector]
                 time_start = std::chrono::high_resolution_clock::now();
+        #ifdef HEXL_FPGA
+                intel::hexl::set_worksize_KeySwitch(1);
+        #endif
                 evaluator.rotate_vector_inplace(encrypted, 1, gal_keys);
+        #ifdef HEXL_FPGA
+                intel::hexl::KeySwitchCompleted();
+        #endif
                 // evaluator.rotate_vector_inplace(encrypted, -1, gal_keys);
                 time_end = std::chrono::high_resolution_clock::now();
                 time_rotate_one_step_sum += std::chrono::duration_cast<std::chrono::microseconds>(time_end - time_start);
