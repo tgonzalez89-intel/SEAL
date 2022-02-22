@@ -140,7 +140,7 @@ void print_parameters(const mode_type mode, const SEALContext &context, const do
 
 void run_internal(
     const mode_type mode, const SEALContext &context, const double scale, double data_bound, const unsigned bench_time,
-    const unsigned test_loops)
+    const unsigned test_loops, const double test_precision)
 {
     std::chrono::high_resolution_clock::time_point time_start, time_end;
 
@@ -349,7 +349,7 @@ void run_internal(
 
         for (size_t i = 0; i < data.size(); ++i)
         {
-            if (std::abs(data[i] - data2[i]) >= 0.5)
+            if (std::abs(data[i] - data2[i]) >= test_precision)
             {
                 std::cout << "expected[" << i << "]=" << data[i] << " output[" << i << "]=" << data2[i] << '\n';
                 std::cout
@@ -366,7 +366,7 @@ void run_internal(
 void run(
     const mode_type mode, const size_t poly_modulus_degree, const std::vector<int> &coeff_mod_bit_sizes,
     const unsigned scale_bit_size, const sec_level_type sec_lvl, const double data_bound, const unsigned bench_time,
-    const unsigned test_loops)
+    const unsigned test_loops, const double test_precision)
 {
     EncryptionParameters params(scheme_type::ckks);
     params.set_poly_modulus_degree(poly_modulus_degree);
@@ -395,11 +395,11 @@ void run(
 
     if (mode == mode_type::test)
     {
-        run_internal(mode_type::test, context, scale, data_bound, 0, test_loops);
+        run_internal(mode_type::test, context, scale, data_bound, 0, test_loops, test_precision);
     }
     else if (mode == mode_type::bench)
     {
-        run_internal(mode_type::bench, context, scale, data_bound, bench_time, 0);
+        run_internal(mode_type::bench, context, scale, data_bound, bench_time, 0, test_precision);
     }
 }
 
@@ -428,6 +428,7 @@ DEFINE_uint32(
     bench_time, 30, "Minimum run time, in seconds, when running in benchmark mode. Must be between 1 and 3600.");
 DEFINE_uint32(
     test_loops, 1, "Amount of times to run the test, when running in test mode. Must be between 1 and 10000.");
+DEFINE_double(test_precision, 0.5, "Precision for verifying test results. Default is 0.5");
 
 int main(int argc, char *argv[])
 {
@@ -523,7 +524,7 @@ int main(int argc, char *argv[])
     intel::hexl::acquire_FPGA_resources();
 #endif
     run(mode, FLAGS_poly_modulus_degree, coeff_mod_bit_sizes, FLAGS_scale_bit_size, sec_lvl, FLAGS_data_bound,
-        FLAGS_bench_time, FLAGS_test_loops);
+        FLAGS_bench_time, FLAGS_test_loops, FLAGS_test_precision);
 #ifdef HEXL_FPGA
     intel::hexl::release_FPGA_resources();
 #endif
