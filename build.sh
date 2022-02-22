@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 
-rm -rf build install thirdparty
+build_dir_name=build-fpga
+rm -rf $build_dir_name install thirdparty
 
-cmake -S . -B build \
+cmake -S . -B $build_dir_name \
 -DCMAKE_C_COMPILER=gcc \
 -DCMAKE_CXX_COMPILER=g++ \
 -DCMAKE_BUILD_TYPE=Release \
@@ -16,15 +17,11 @@ cmake -S . -B build \
 -DSEAL_USE_ZLIB=OFF \
 -DSEAL_USE_ZSTD=ON \
 -DBUILD_SHARED_LIBS=ON \
--DSEAL_USE_INTEL_HEXL=OFF \
--DSEAL_USE_INTEL_HEXL_FPGA=OFF \
+-DSEAL_USE_INTEL_HEXL=ON \
+-DSEAL_USE_INTEL_HEXL_FPGA=ON \
 -DHEXL_EXPERIMENTAL=ON \
--DHEXL_DUMP_JSON=OFF
+-DHEXL_DUMP_JSON=ON \
+-DSEAL_DUMP_JSON=ON
 
-cmake --build build -j
-#cmake --install build
-
-cd build/bin
-#ln -s $(realpath ${PWD}/../../../he-fpga-bitstreams/bitstreams/hexl_fpga.aocx)
-#ln -s $(realpath ${PWD}/../../../pre/build/device/hexl_fpga.aocx)
-cd ../..
+cmake --build $build_dir_name -j
+#cmake --install $build_dir_name

@@ -5,7 +5,7 @@ FetchContent_Declare(
     hexl-fpga
     PREFIX hexl-fpga
     GIT_REPOSITORY https://github.com/intel-sandbox/hexl-fpga-prerelease.git
-    GIT_TAG ymeng/keyswitch-dev
+    GIT_TAG ymeng/keyswitch-shuffle
 )
 FetchContent_GetProperties(hexl-fpga)
 

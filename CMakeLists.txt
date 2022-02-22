@@ -223,6 +223,15 @@ set(SEAL_USE_INTEL_HEXL_FPGA_OPTION_STR "Use Intel HEXL-FPGA library")
 option(SEAL_USE_INTEL_HEXL_FPGA ${SEAL_USE_INTEL_HEXL_FPGA_OPTION_STR} OFF)
 message(STATUS "SEAL_USE_INTEL_HEXL_FPGA: ${SEAL_USE_INTEL_HEXL_FPGA}")
 
+# [option] SEAL_DUMP_JSON (default: OFF)
+set(SEAL_DUMP_JSON_OPTION_STR "Dump JSON for KeySwitch for debug")
+option(SEAL_DUMP_JSON ${SEAL_DUMP_JSON_OPTION_STR} OFF)
+message(STATUS "SEAL_DUMP_JSON: ${SEAL_DUMP_JSON}")
+
+if (SEAL_DUMP_JSON)
+  add_definitions(-DSEAL_DUMP_JSON)
+endif()
+
 if(SEAL_USE_INTEL_HEXL_FPGA)
     set(SEAL_USE_INTEL_HEXL ON CACHE BOOL "" FORCE)
 endif()
@@ -506,6 +515,7 @@ else()
 
         if(SEAL_USE_INTEL_HEXL_FPGA)
             target_link_libraries(seal_shared PRIVATE hexl-fpga)
+            add_definitions(-DHEXL_FPGA)
         endif()
 
         # Install shared HEXL library to installation directory

@@ -12,8 +12,20 @@
 #include <algorithm>
 #include <cmath>
 #include <functional>
+// #ifndef HEXL_FPGA
 #ifdef SEAL_USE_INTEL_HEXL
 #include "hexl/hexl.hpp"
+// #endif
+#endif
+#ifdef SEAL_DUMP_JSON
+#include "json.hh"
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <sstream>
+#endif
+#ifdef HEXL_FPGA
+// #include "hexl-fpga.h"
 #endif
 
 using namespace std;
@@ -2178,15 +2190,136 @@ namespace seal
 
             const uint64_t *t_target_iter_ptr = &(*target_iter)[0];
 
-            intel::hexl::KeySwitch(
-                encrypted.data(), t_target_iter_ptr, coeff_count, decomp_modulus_size, key_modulus_size,
+            // uint64_t *result = encrypted.data();
+            // const uint64_t *moduli = key_context_data.small_ntt_tables_moduli().data();
+            // const uint64_t **k_switch_keys = key_vector_raw_ptr->data();
+            // const uint64_t *modswitch_factors_ = key_context_data.modswitch_factors().data();
+
+            // intel::hexl::KeySwitch(
+            //     result, t_target_iter_ptr, coeff_count, decomp_modulus_size, key_modulus_size,
+            //     rns_modulus_size, key_component_count, moduli,
+            //     k_switch_keys, modswitch_factors_, nullptr);
+
+            seal::Ciphertext result1(encrypted);
+            seal::Ciphertext result2(encrypted);
+
+        // #ifndef HEXL_FPGA
+            intel::hexl::cpu::KeySwitch(
+                result1.data(), t_target_iter_ptr, coeff_count, decomp_modulus_size, key_modulus_size,
                 rns_modulus_size, key_component_count, key_context_data.small_ntt_tables_moduli().data(),
                 key_vector_raw_ptr->data(), key_context_data.modswitch_factors().data(), nullptr);
+        // #endif
+
+        #ifdef SEAL_DUMP_JSON
+            static int dump_flag = 0;
+
+            nlohmann::json js;
+            js["coeff_count"] = coeff_count;
+            js["decomp_modulus_size"] = decomp_modulus_size;
+            js["key_modulus_size"] = key_modulus_size;
+            js["rns_modulus_size"] = rns_modulus_size;
+            js["key_component_count"] = key_component_count;
+            for (size_t i = 0; i < coeff_count * decomp_modulus_size; i++) {
+                js["t_target_iter_ptr"].push_back(t_target_iter_ptr[i]);
+            }
+            for (size_t i = 0; i < coeff_count * decomp_modulus_size * 2; i++) {
+                js["input"].push_back(encrypted.data()[i]);
+                //js["input"].push_back(encrypted.data()[i + coeff_count * decomp_modulus_size]);
+            }
+            for (size_t i = 0; i < key_modulus_size; i++) {
+                js["moduli"].push_back(key_context_data.small_ntt_tables_moduli().data()[i]);
+            }
+            for (size_t i = 0; i < key_modulus_size; i++) {
+                js["modswitch_factors"].push_back(key_context_data.modswitch_factors().data()[i]);
+            }
+            for (size_t i = 0; i < decomp_modulus_size; i++) {
+                for (size_t j = 0; j < 2 * key_modulus_size * coeff_count; j++) {
+                    js["key_vector"][i].push_back(key_vector_raw_ptr->data()[i][j]);
+                }
+            }
+        #endif
+        #ifdef HEXL_FPGA
+            // intel::hexl::set_worksize_KeySwitch(1);
+        #endif
+            // std::vector<uint64_t> tmp_result2;
+            // for (size_t i = 0; i < coeff_count * decomp_modulus_size * 2; ++i) {
+            //     tmp_result2.push_back(encrypted.data()[i]);
+            // }
+            // for (size_t i = 0; i < coeff_count * decomp_modulus_size; ++i) {
+            //     tmp_result2.push_back(encrypted.data()[i]);
+            //     tmp_result2.push_back(encrypted.data()[i + coeff_count * decomp_modulus_size]);
+            // }
+            // std::cout << "size of tmp_result2=" << tmp_result2.size() << std::endl;
+            // std::cout << "size of result2=" << result2.dyn_array().size() << std::endl;
+            intel::hexl::KeySwitch(
+                result2.data(), t_target_iter_ptr, coeff_count, decomp_modulus_size, key_modulus_size,
+                rns_modulus_size, key_component_count, key_context_data.small_ntt_tables_moduli().data(),
+                key_vector_raw_ptr->data(), key_context_data.modswitch_factors().data(), nullptr);
+            // intel::hexl::KeySwitch(
+            //     result2.data(), t_target_iter_ptr, coeff_count, decomp_modulus_size, key_modulus_size,
+            //     rns_modulus_size, key_component_count, key_context_data.small_ntt_tables_moduli().data(),
+            //     key_vector_raw_ptr->data(), key_context_data.modswitch_factors().data(), nullptr);
+        // #ifndef HEXL_FPGA
+            // std::vector<uint64_t> tmp_result1;
+            // for (size_t i = 0; i < coeff_count * decomp_modulus_size; ++i) {
+            //     tmp_result1.push_back(result1.data()[i]);
+            //     tmp_result1.push_back(result1.data()[i + coeff_count * decomp_modulus_size]);
+            // }
+            // for (size_t i=0; i < tmp_result1.size(); ++i) {
+            //     if (tmp_result1[i] != tmp_result2[i]) {
+            //         std::cout << "ERROR: TMP Results differ (1)." << std::endl;
+            //         std::cout << "i=" << i << ", " << tmp_result1[i] << " vs " << tmp_result2[i] << std::endl;
+            //         break;
+            //     }
+            // }
+        // #endif
+        // for (size_t i = 0; i < coeff_count * decomp_modulus_size; ++i) {
+        //     result2.data()[i] = tmp_result2[i*2];
+        //     result2.data()[i + coeff_count * decomp_modulus_size] = tmp_result2[i*2 + 1];
+        // }
+
+        #ifdef HEXL_FPGA
+            // intel::hexl::KeySwitchCompleted();
+        #endif
+        #ifdef SEAL_DUMP_JSON
+            for (size_t i = 0; i < coeff_count * decomp_modulus_size * 2; i++) {
+            // for (size_t i = 0; i < tmp_result2.size(); i++) {
+                js["expected_output"].push_back(result2.data()[i]);
+                // js["expected_output"].push_back(
+                //     result2.data()[i + coeff_count * decomp_modulus_size]);
+                // js["expected_output"].push_back(tmp_result2.data()[i]);
+            }
+
+            std::ostringstream out_filename;
+            out_filename << "seal_";
+            out_filename << coeff_count << "_";
+            out_filename << decomp_modulus_size << "_";
+            out_filename << key_modulus_size << "_";
+            out_filename << rns_modulus_size << "_";
+            out_filename << key_component_count << "_" << dump_flag << ".json";
+            printf("Saving to %s\n", out_filename.str().c_str());
+            std::ofstream o(out_filename.str());
+            o << std::setw(4) << js << std::endl;
+
+            dump_flag++;
+        #endif
+
+        // #ifndef HEXL_FPGA
+            for (size_t i=0; i < encrypted.dyn_array().size(); ++i) {
+                if (result1[i] != result2[i]) {
+                    std::cout << "ERROR: Results differ (2)." << std::endl;
+                    std::cout << "i=" << i << ", " << result1[i] << " vs " << result2[i] << std::endl;
+                    break;
+                }
+            }
+        // #endif
 
             if (cache_new_key_vector)
             {
                 const_cast<Evaluator *>(this)->key_vector_cache.emplace(key_cipher_data, std::move(key_vector_raw));
             }
+
+            encrypted = result2; // Copy the result to the variable SEAL expects
 
             return;
         }

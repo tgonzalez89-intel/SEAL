@@ -139,7 +139,7 @@ void print_parameters(const mode_type mode, const SEALContext &context, const do
 }
 
 void run_internal(
-    const mode_type mode, const SEALContext &context, const double scale, long data_bound, const unsigned bench_time, const unsigned test_loops)
+    const mode_type mode, const SEALContext &context, const double scale, double data_bound, const unsigned bench_time, const unsigned test_loops)
 {
     std::chrono::high_resolution_clock::time_point time_start, time_end;
 
@@ -203,9 +203,9 @@ void run_internal(
             coeff_mod_bit_sizes.push_back(mod.bit_count());
         }
         auto data_bound_bit_size = *std::min_element(coeff_mod_bit_sizes.cbegin(), coeff_mod_bit_sizes.cend()) / 2;
-        data_bound = 1L << data_bound_bit_size;
+        data_bound = static_cast<double>(1L << data_bound_bit_size);
     }
-    std::uniform_int_distribution<long> distr(-data_bound, data_bound);
+    std::uniform_real_distribution<double> distr(-data_bound, data_bound);
     data.resize(encoder.slot_count());
 
     Plaintext plain;
@@ -223,7 +223,8 @@ void run_internal(
         {
             // Fill input vector with random data
             for (size_t i = 0; i < data.size(); i++)
-                data[i] = static_cast<double>(distr(gen));
+                // data[i] = static_cast<double>(distr(gen));
+                data[i] = i;
 
             // [Encoding]
             encoder.encode(data, scale, plain);
@@ -359,7 +360,7 @@ void run_internal(
 
 void run(
     const mode_type mode, const size_t poly_modulus_degree, const std::vector<int> &coeff_mod_bit_sizes,
-    const unsigned scale_bit_size, const sec_level_type sec_lvl, const long data_bound, const unsigned bench_time, const unsigned test_loops)
+    const unsigned scale_bit_size, const sec_level_type sec_lvl, const double data_bound, const unsigned bench_time, const unsigned test_loops)
 {
     EncryptionParameters params(scheme_type::ckks);
     params.set_poly_modulus_degree(poly_modulus_degree);
@@ -413,7 +414,7 @@ DEFINE_uint32(
 // DEFINE_uint64(plain_modulus, 786433, "Plaintext modulus. Only applies to the BFV scheme. Must be at most 60 bits
 // long.");
 DEFINE_uint32(security_lvl, 0, "Security level. One of {0, 128, 192, 256}.");
-DEFINE_int64(
+DEFINE_double(
     data_bound, 0,
     "Limit for the random data generated for the test input vector. Simetric in the positive and negative axes. The "
     "default (0) sets it to a power of two, where the power is the minimum of coeff_mod_bit_sizes, divided by two.");
