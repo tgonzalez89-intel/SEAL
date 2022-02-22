@@ -515,7 +515,6 @@ else()
 
         if(SEAL_USE_INTEL_HEXL_FPGA)
             target_link_libraries(seal_shared PRIVATE hexl-fpga)
-            add_definitions(-DHEXL_FPGA)
         endif()
 
         # Install shared HEXL library to installation directory

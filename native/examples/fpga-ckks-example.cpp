@@ -139,7 +139,8 @@ void print_parameters(const mode_type mode, const SEALContext &context, const do
 }
 
 void run_internal(
-    const mode_type mode, const SEALContext &context, const double scale, double data_bound, const unsigned bench_time, const unsigned test_loops)
+    const mode_type mode, const SEALContext &context, const double scale, double data_bound, const unsigned bench_time,
+    const unsigned test_loops)
 {
     std::chrono::high_resolution_clock::time_point time_start, time_end;
 
@@ -212,7 +213,8 @@ void run_internal(
     Ciphertext encrypted(context);
 
     unsigned loop_count = 0;
-    do {
+    do
+    {
         std::cout << '\n' << std::string("Running ") + (mode == mode_type::test ? "tests " : "benchmarks ");
         std::cout << "   ";
         long count = 0;
@@ -223,8 +225,9 @@ void run_internal(
         {
             // Fill input vector with random data
             for (size_t i = 0; i < data.size(); i++)
-                // data[i] = static_cast<double>(distr(gen));
-                data[i] = i;
+            {
+                data[i] = static_cast<double>(distr(gen));
+            }
 
             // [Encoding]
             encoder.encode(data, scale, plain);
@@ -234,13 +237,13 @@ void run_internal(
 
             // [Multiply]
             time_start = std::chrono::high_resolution_clock::now();
-    #ifdef HEXL_FPGA
+#ifdef HEXL_FPGA
             intel::hexl::set_worksize_DyadicMultiply(1);
-    #endif
+#endif
             evaluator.multiply_inplace(encrypted, encrypted);
-    #ifdef HEXL_FPGA
+#ifdef HEXL_FPGA
             intel::hexl::DyadicMultiplyCompleted();
-    #endif
+#endif
             time_end = std::chrono::high_resolution_clock::now();
             time_multiply_sum += std::chrono::duration_cast<std::chrono::microseconds>(time_end - time_start);
 
@@ -248,13 +251,13 @@ void run_internal(
             {
                 // [Relinearize]
                 time_start = std::chrono::high_resolution_clock::now();
-        #ifdef HEXL_FPGA
+#ifdef HEXL_FPGA
                 intel::hexl::set_worksize_KeySwitch(1);
-        #endif
+#endif
                 evaluator.relinearize_inplace(encrypted, relin_keys);
-        #ifdef HEXL_FPGA
+#ifdef HEXL_FPGA
                 intel::hexl::KeySwitchCompleted();
-        #endif
+#endif
                 time_end = std::chrono::high_resolution_clock::now();
                 time_relinearize_sum += std::chrono::duration_cast<std::chrono::microseconds>(time_end - time_start);
 
@@ -263,16 +266,17 @@ void run_internal(
 
                 // [Rotate Vector]
                 time_start = std::chrono::high_resolution_clock::now();
-        #ifdef HEXL_FPGA
+#ifdef HEXL_FPGA
                 intel::hexl::set_worksize_KeySwitch(1);
-        #endif
+#endif
                 evaluator.rotate_vector_inplace(encrypted, 1, gal_keys);
-        #ifdef HEXL_FPGA
+#ifdef HEXL_FPGA
                 intel::hexl::KeySwitchCompleted();
-        #endif
+#endif
                 // evaluator.rotate_vector_inplace(encrypted, -1, gal_keys);
                 time_end = std::chrono::high_resolution_clock::now();
-                time_rotate_one_step_sum += std::chrono::duration_cast<std::chrono::microseconds>(time_end - time_start);
+                time_rotate_one_step_sum +=
+                    std::chrono::duration_cast<std::chrono::microseconds>(time_end - time_start);
             }
 
             // Print a dot to indicate progress.
@@ -300,8 +304,8 @@ void run_internal(
 
             ++count;
         } while (mode == mode_type::bench && std::chrono::duration_cast<std::chrono::seconds>(
-                                                std::chrono::high_resolution_clock::now() - test_time_start)
-                                                    .count() < bench_time);
+                                                 std::chrono::high_resolution_clock::now() - test_time_start)
+                                                     .count() < bench_time);
 
         std::cout << "\b\b\b";
         std::cout << "...";
@@ -348,7 +352,8 @@ void run_internal(
             if (std::abs(data[i] - data2[i]) >= 0.5)
             {
                 std::cout << "expected[" << i << "]=" << data[i] << " output[" << i << "]=" << data2[i] << '\n';
-                std::cout << "ERROR: Functionally incorrect: One or more values differ between expected and output.\n\n";
+                std::cout
+                    << "ERROR: Functionally incorrect: One or more values differ between expected and output.\n\n";
                 return;
             }
         }
@@ -360,7 +365,8 @@ void run_internal(
 
 void run(
     const mode_type mode, const size_t poly_modulus_degree, const std::vector<int> &coeff_mod_bit_sizes,
-    const unsigned scale_bit_size, const sec_level_type sec_lvl, const double data_bound, const unsigned bench_time, const unsigned test_loops)
+    const unsigned scale_bit_size, const sec_level_type sec_lvl, const double data_bound, const unsigned bench_time,
+    const unsigned test_loops)
 {
     EncryptionParameters params(scheme_type::ckks);
     params.set_poly_modulus_degree(poly_modulus_degree);
@@ -420,7 +426,8 @@ DEFINE_double(
     "default (0) sets it to a power of two, where the power is the minimum of coeff_mod_bit_sizes, divided by two.");
 DEFINE_uint32(
     bench_time, 30, "Minimum run time, in seconds, when running in benchmark mode. Must be between 1 and 3600.");
-DEFINE_uint32(test_loops, 1, "Amount of times to run the test, when running in test mode. Must be between 1 and 10000.");
+DEFINE_uint32(
+    test_loops, 1, "Amount of times to run the test, when running in test mode. Must be between 1 and 10000.");
 
 int main(int argc, char *argv[])
 {

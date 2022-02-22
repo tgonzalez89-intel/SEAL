@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-build_dir_name=build-fpga
+build_dir_name=build
 rm -rf $build_dir_name install thirdparty
 
 cmake -S . -B $build_dir_name \
@@ -20,8 +20,8 @@ cmake -S . -B $build_dir_name \
 -DSEAL_USE_INTEL_HEXL=ON \
 -DSEAL_USE_INTEL_HEXL_FPGA=ON \
 -DHEXL_EXPERIMENTAL=ON \
--DHEXL_DUMP_JSON=ON \
--DSEAL_DUMP_JSON=ON
+-DHEXL_DUMP_JSON=OFF \
+-DSEAL_DUMP_JSON=OFF
 
 cmake --build $build_dir_name -j
 #cmake --install $build_dir_name
